@@ -1,6 +1,15 @@
 <template>
     <div>
         <h2>articles</h2>
+        <form @submit.prevent="addArticle" class="mb-3">
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Title" v-model="article.title">
+            </div>
+            <div class="form-group">
+                <textarea name="" class="form-control" placeholder="Body" v-model="article.body"></textarea>
+            </div>
+            <button class="btn btn-light btn-block" type="submit">Save</button>
+        </form>
         <nav aria-label="Page navigation example">
             <ul class="pagination">
                 <li v-bind:class="[{disabled: !pagination.prev_page_url}]" class="page-item">
@@ -20,6 +29,7 @@
             <h3>{{ article.title }}</h3>
             <p> {{ article.body }}</p>
             <hr>
+            <button class="btn btn-warning mb-2" @click="editArticle(article)">Edit</button>
             <button class="btn btn-danger" @click="deleteArticle(article.id)">Delete</button>
         </div>
     </div>
@@ -37,7 +47,7 @@ export default {
             },
             article_id: '',
             pagination: {},
-            eidt: false
+            edit: false
         }
     },
     created(){
@@ -65,6 +75,63 @@ export default {
             }
 
             this.pagination = pagination;
+        },
+        deleteArticle(id){
+            if(confirm('Are you sure?')){
+                fetch(`api/article/${id}`, {
+                    method: 'delete'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert('Article removed');
+                    this.fetchArticles()
+                })
+                .catch(err => console.log(err));
+            }
+        },
+        addArticle(){
+            if(this.edit === false){
+                //add
+                fetch('api/article', {
+                    method: 'post',
+                    body: JSON.stringify(this.article),
+                    headers: {
+                        'content-type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.article.title = '';
+                    this.article.body = '';
+                    alert('Article added');
+                    this.fetchArticles()
+                })
+                .catch(err => console.log(err));
+            }else{
+                //update
+                fetch('api/article', {
+                    method: 'put',
+                    body: JSON.stringify(this.article),
+                    headers: {
+                        'content-type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.article.title = '';
+                    this.article.body = '';
+                    alert('Article edited!');
+                    this.fetchArticles()
+                })
+                .catch(err => console.log(err));
+            }
+        },
+        editArticle(article){
+            this.edit = true;
+            this.article.id = article.id;
+            this.article.article_id = article.id;
+            this.article.title = article.title;
+            this.article.body = article.body;
         }
     }
 }
